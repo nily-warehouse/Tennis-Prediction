@@ -1,0 +1,16 @@
+# ipython essential
+ipykernel
+
+# data exploration
+numpy
+pandas
+
+# ploting
+matplotlib
+seaborn
+
+# kaggle
+kagglehub
+ 
+# preprocessing
+scikit-learn
