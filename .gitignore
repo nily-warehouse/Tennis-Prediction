@@ -1,7 +1,12 @@
+# macos
+.DS_Store
+
+# temp
+temp/
+
 # python
 .venv/
 __pycache__/
 
 # data
-kaggle-atp/
-tennis_MatchChartingProject/
+src/data/kaggle-atp
