@@ -43,3 +43,33 @@ def encode_best_of(df:pd.DataFrame) -> pd.DataFrame:
     df_ = df.copy()
     df_['Best_of_5'] = (df_['Best of'] == 5).astype('int8')
     return df_
+
+def export_final_data(df:pd.DataFrame):
+    df_processed = df[[
+        # overall ELO and experience
+        'Elo_diff',
+        'Elo_mean',
+        'N_min', 
+
+        # surface (as ELO form for each Player)
+        'elo_surface_diff', 
+        'elo_effective_diff', 
+        'spec_diff', 
+        'surface_exp_min', 
+
+        # pts and rank
+        'log_pts_diff', 
+        'log_rank_diff', 
+
+        # surface (as categorical data for each Game)
+        'Surface_Clay', 
+        'Surface_Grass', 
+        'Surface_Hard', 
+
+        # best of 3 or 5
+        'Best_of_5'
+    ]]
+
+    elo_prob_index = df[['elo_prob']]
+
+    return df_processed, elo_prob_index

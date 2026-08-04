@@ -8,7 +8,7 @@ def sort_data(df:pd.DataFrame) -> pd.DataFrame:
     df_['Date'] = pd.to_datetime(df_['Date'], errors='coerce')
     return df_.sort_values('Date', ascending=True)
 
-def seprate_year_column(df:pd.DataFrame) -> pd.DataFrame:
+def separate_year_column(df:pd.DataFrame) -> pd.DataFrame:
     df_ = df.copy()
     df_['Year'] = df_['Date'].dt.year
     return df_
