@@ -14,3 +14,6 @@ kagglehub
  
 # preprocessing
 scikit-learn
+
+# save
+pyarrow
