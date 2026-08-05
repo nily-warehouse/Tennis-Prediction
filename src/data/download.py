@@ -26,4 +26,3 @@ def pull_data() -> Path:
 
 if __name__ == "__main__":
     print(pull_data())
-    # must be -> '../src/data/kaggle-atp/datasets/dissfya/atp-tennis-2000-2023daily-pull/versions/1146/atp_tennis.csv'

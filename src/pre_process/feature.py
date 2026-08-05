@@ -2,7 +2,9 @@ import numpy  as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
+
 def add_log_pts_diff(df:pd.DataFrame) -> pd.DataFrame:
+    """Transform Pts features to log1p difference form."""
     df_ = df.copy()
 
     # monotone, symmetric, scale-invariant, sign carries direction
@@ -12,7 +14,9 @@ def add_log_pts_diff(df:pd.DataFrame) -> pd.DataFrame:
 
     return df_
 
+
 def add_log_rank_diff(df:pd.DataFrame) -> pd.DataFrame:
+    """Transform Rank features to log1p difference form."""
     df_ = df.copy()
 
     # Rank is ordinal, so its diff is already scale-free by nature
@@ -22,7 +26,9 @@ def add_log_rank_diff(df:pd.DataFrame) -> pd.DataFrame:
 
     return df_
 
+
 def encode_surface_types(df:pd.DataFrame) -> pd.DataFrame:
+    """Encode surface categories with OneHotEncoder."""
     df_ = df.copy()
 
     onehot = OneHotEncoder(sparse_output=False)
@@ -39,12 +45,17 @@ def encode_surface_types(df:pd.DataFrame) -> pd.DataFrame:
 
     return df_
 
+
 def encode_best_of(df:pd.DataFrame) -> pd.DataFrame:
+    """Encode `Best of` feature with binarizing."""
     df_ = df.copy()
     df_['Best_of_5'] = (df_['Best of'] == 5).astype('int8')
     return df_
 
+
 def export_final_data(df:pd.DataFrame):
+    """Extract features and Elo probablity index."""
+
     df_processed = df[[
         # overall ELO and experience
         'Elo_diff',
