@@ -78,7 +78,10 @@ def export_final_data(df:pd.DataFrame):
         'Surface_Hard', 
 
         # best of 3 or 5
-        'Best_of_5'
+        'Best_of_5',
+
+        # y
+        'Winner',
     ]]
 
     elo_prob_index = df[['elo_prob']]
