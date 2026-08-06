@@ -12,8 +12,9 @@ seaborn
 # kaggle
 kagglehub
  
-# preprocessing
+# ai-processes
 scikit-learn
+xgboost
 
 # save
 pyarrow
