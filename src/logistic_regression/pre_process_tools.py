@@ -6,9 +6,12 @@ from sklearn.preprocessing import StandardScaler
 
 FEATURES = [
     'Elo_diff',
+    'Elo_mean',
+    'N_min',
     'elo_surface_diff',
     'elo_effective_diff',
     'spec_diff',
+    'surface_exp_min',
     'log_pts_diff',
     'log_rank_diff',
     # interactions (odd x even -> odd)
