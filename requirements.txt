@@ -15,6 +15,7 @@ kagglehub
 # ai-processes
 scikit-learn
 xgboost
+tensorflow
 
 # save
 pyarrow
