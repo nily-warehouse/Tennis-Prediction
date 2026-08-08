@@ -1,0 +1,760 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/* ============================================================
+   1. DESIGN TOKENS — LIGHT THEME
+   ============================================================ */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg:            #f7f9f7;
+  --surface:       #ffffff;
+  --surface-sunken:#f2f5f2;
+  --surface-raised:#fbfcfb;
+
+  /* Text */
+  --text:          #16241e;
+  --text-muted:    #66756c;
+  --text-faint:    #9aa8a0;
+
+  /* Borders */
+  --border:        #e2e8e3;
+  --border-soft:   #edf1ee;
+  --shadow-flat:   #eef2ee;
+
+  /* Accent (brand green) */
+  --accent:        #0e8a63;
+  --accent-soft:   #ddf3e8;
+  --accent-border: #b6e5cd;
+  --accent-halo:   rgba(14, 138, 99, .18);
+  --accent-dim:    #c5e9d4;
+
+  /* Secondary accent (used in probability bar) */
+  --warm:          #e08a45;
+
+  /* Form controls */
+  --control-bg:    #ffffff;
+  --track:         #e5ebe5;
+  --track-off:     #c3cec7;
+  --thumb:         #ffffff;
+
+  /* Primary button */
+  --btn-primary-bg:     #16241e;
+  --btn-primary-text:   #ffffff;
+  --btn-primary-accent: #8ee2ba;
+
+  /* Inverted panel ("Up next") */
+  --inverse-bg:     #16241e;
+  --inverse-border: #16241e;
+  --inverse-text:   #f3f8f4;
+  --inverse-muted:  #8b9c92;
+  --inverse-accent: #7fdcb0;
+
+  --radius-sm: 4px;
+  --radius:    8px;
+  --radius-lg: 12px;
+}
+
+/* ============================================================
+   2. DESIGN TOKENS — DARK THEME
+   Only tokens are overridden; no component patches needed.
+   ============================================================ */
+body:has(#dark-mode:checked) {
+  color-scheme: dark;
+
+  --bg:            #0e1613;
+  --surface:       #16211c;
+  --surface-sunken:#1d2a24;
+  --surface-raised:#1a2620;
+
+  --text:          #e6efe9;
+  --text-muted:    #96a79d;
+  --text-faint:    #6f8077;
+
+  --border:        #2a3a32;
+  --border-soft:   #223029;
+  --shadow-flat:   #101a15;
+
+  --accent:        #35c48d;
+  --accent-soft:   #1b3a2b;
+  --accent-border: #2c5b43;
+  --accent-halo:   rgba(53, 196, 141, .22);
+  --accent-dim:    #2c5b43;
+
+  --warm:          #e79a5c;
+
+  --control-bg:    #1b2821;
+  --track:         #293930;
+  --track-off:     #33453b;
+  --thumb:         #e6efe9;
+
+  --btn-primary-bg:     #35c48d;
+  --btn-primary-text:   #08120d;
+  --btn-primary-accent: #0b3626;
+
+  --inverse-bg:     #1b2b23;
+  --inverse-border: #2f4a3a;
+  --inverse-text:   #eaf3ed;
+  --inverse-muted:  #92a89b;
+  --inverse-accent: #7fdcb0;
+}
+
+/* ============================================================
+   3. BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: 14px Manrope, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  transition: color .2s, background-color .2s;
+}
+
+h1, h2, p { margin-top: 0; }
+
+h1 {
+  margin-bottom: 18px;
+  font-size: clamp(40px, 6vw, 70px);
+  line-height: .95;
+  letter-spacing: -.07em;
+}
+
+h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -.04em;
+}
+
+.shell {
+  max-width: 1180px;
+  margin: auto;
+  padding: 28px 34px 70px;
+}
+
+/* Shared typographic helpers */
+.muted { color: var(--text-muted); font-weight: 500; }
+
+.lab-tag,
+.eyebrow,
+small,
+.hint,
+.fixture-count {
+  font: 500 10px 'DM Mono', monospace;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+}
+
+.eyebrow { margin: 0 0 12px; color: var(--accent); }
+
+.empty { color: var(--text-faint) !important; }
+
+/* ============================================================
+   4. TOP BAR
+   ============================================================ */
+.topbar,
+.controls,
+.panel-head,
+.prob-row {
+  display: flex;
+  align-items: center;
+}
+
+.topbar {
+  justify-content: space-between;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -.4px;
+}
+
+/* Auto-inverts: text color becomes the page background */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--bg);
+  font: 500 11px 'DM Mono', monospace;
+}
+
+/* ============================================================
+   5. THEME TOGGLE
+   ============================================================ */
+.theme-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.theme-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: -3px;
+  border-radius: 9px;
+  background: var(--track-off);
+  transition: background .2s;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--thumb);
+  transition: transform .2s;
+}
+
+.theme-toggle input:checked + .theme-toggle-track { background: var(--accent); }
+.theme-toggle input:checked + .theme-toggle-track .theme-toggle-thumb { transform: translateX(14px); }
+
+.theme-toggle input:focus-visible + .theme-toggle-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ============================================================
+   6. HERO
+   ============================================================ */
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 30px;
+  padding: 60px 0 42px;
+}
+
+.lede {
+  margin: 0;
+  max-width: 470px;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.model-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 255px;
+  padding: 14px 18px;
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+
+.model-chip small { display: block; margin-bottom: 5px; font-size: 9px; }
+.model-chip strong { font-size: 12px; }
+
+.pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 5px var(--accent-halo);
+}
+
+/* ============================================================
+   7. CONTROLS
+   ============================================================ */
+.controls {
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+select,
+button { font: 600 12px Manrope, sans-serif; }
+
+select {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--control-bg);
+  color: var(--text);
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.button {
+  padding: 11px 15px;
+  border-radius: 7px;
+}
+
+.primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.primary span {
+  padding-left: 7px;
+  color: var(--btn-primary-accent);
+}
+
+.secondary {
+  background: var(--control-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.control-spacer { flex: 1; }
+
+.progress-track {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--track);
+}
+
+.progress-track div {
+  width: 0;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width .3s;
+}
+
+.fixture-count {
+  margin: 10px 0 18px;
+  font-size: 9px;
+  text-align: right;
+}
+
+/* ============================================================
+   8. LAYOUT & PANELS
+   ============================================================ */
+.grid {
+  display: grid
+  ;grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+  gap: 18px;
+}
+
+.panel,
+.event-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.panel { padding: 24px; }
+
+.panel-head {
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.live-dot {
+  color: var(--accent);
+  font: 500 10px 'DM Mono', monospace;
+}
+
+.side-column {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+/* ============================================================
+   9. BRACKET
+   ============================================================ */
+.bracket-section { margin-bottom: 18px; }
+
+.bracket-scroll {
+  overflow-x: auto;
+  padding: 8px 4px 16px;
+}
+
+.bracket {
+  display: flex;
+  align-items: stretch;
+  min-width: 840px;
+  min-height: 390px;
+}
+
+.bracket-round {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.round-label {
+  margin: 0 0 16px 10px;
+  color: var(--text-muted);
+  font: 500 10px 'DM Mono', monospace;
+  letter-spacing: .08em;
+}
+
+.round-matches {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 12px;
+}
+
+.bracket-match {
+  position: relative;
+  margin: 0 10px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: 0 2px 0 var(--shadow-flat);
+}
+
+/* Horizontal connector out of each match */
+.bracket-match::after {
+  content: "";
+  position: absolute;
+  right: -21px;
+  top: 50%;
+  width: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* Vertical connector joining a pair of matches */
+.bracket-round:not(:last-child) .bracket-match::before {
+  content: "";
+  position: absolute;
+  left: calc(100% + 20px);
+  top: -26%;
+  height: 52%;
+  border-right: 1px solid var(--border);
+}
+
+.bracket-round:not(:first-child) .bracket-match { margin-left: 20px; }
+.bracket-round:not(:first-child) .bracket-match::after { right: -11px; width: 10px; }
+
+.bracket-match.is-next {
+  border-color: var(--accent);
+  box-shadow: 0 2px 0 var(--accent-dim);
+}
+
+.bracket-match.is-complete { background: var(--surface-sunken); }
+
+.bracket-match small {
+  display: block;
+  padding: 5px 6px 1px;
+  color: var(--accent);
+  font: 500 8px 'DM Mono', monospace;
+}
+
+.bracket-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  min-height: 25px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.bracket-player + .bracket-player { border-top: 1px solid var(--border-soft); }
+
+.bracket-player.is-winner {
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.bracket-player span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bracket-legend {
+  color: var(--text-muted);
+  font: 500 9px 'DM Mono', monospace;
+  white-space: nowrap;
+}
+
+.bracket-legend i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 5px 0 12px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.bracket-legend .legend-done { background: var(--accent-dim); }
+
+/* ============================================================
+   10. STANDINGS TABLE
+   ============================================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  padding: 0 9px 12px;
+  color: var(--text-muted);
+  font: 500 10px 'DM Mono', monospace;
+  text-align: left;
+}
+
+td {
+  padding: 13px 9px;
+  border-top: 1px solid var(--border-soft);
+}
+
+th:first-child,
+td:first-child { padding-left: 0; }
+
+td:nth-child(n+3),
+th:nth-child(n+3) { text-align: right; }
+
+td:nth-child(2) { width: 50%; }
+
+td small { margin-left: 7px; font-size: 9px; }
+
+.rank {
+  color: var(--text-faint);
+  font: 500 11px 'DM Mono', monospace;
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: 500 9px 'DM Mono', monospace;
+}
+
+.player-name { font-weight: 700; font-size: 12px; }
+
+.win,
+.points {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.points { font-size: 15px; }
+
+/* ============================================================
+   11. UP NEXT (inverted card)
+   ============================================================ */
+.next {
+  background: var(--inverse-bg);
+  border-color: var(--inverse-border);
+  color: var(--inverse-text);
+}
+
+.next .eyebrow { color: var(--inverse-accent); }
+
+.next h2 {
+  margin-bottom: 29px;
+  font-size: 19px;
+  line-height: 1.5;
+}
+
+.next h2 span {
+  padding: 0 7px;
+  color: var(--inverse-muted);
+  font-size: 11px;
+}
+
+.next .hint {
+  margin: 20px 0 0;
+  color: var(--inverse-muted);
+  font-size: 9px;
+}
+
+.probability { font-size: 11px; }
+
+.prob-row {
+  justify-content: space-between;
+  margin: 7px 0;
+}
+
+.prob-row strong {
+  color: var(--inverse-accent);
+  font: 500 12px 'DM Mono', monospace;
+}
+
+.bar {
+  display: flex;
+  gap: 3px;
+  height: 9px;
+}
+
+.bar i {
+  display: block;
+  transition: width .3s;
+}
+
+#prob-a {
+  background: var(--inverse-accent);
+  border-radius: 5px 0 0 5px;
+}
+
+#prob-b {
+  background: var(--warm);
+  border-radius: 0 5px 5px 0;
+}
+
+/* ============================================================
+   12. MATCH FEED
+   ============================================================ */
+.feed ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feed li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.feed li strong { color: var(--text); }
+
+.feed li em {
+  margin-left: auto;
+  color: var(--accent);
+  font: 500 10px 'DM Mono', monospace;
+  font-style: normal;
+}
+
+.feed-round {
+  color: var(--text-faint);
+  font: 500 10px 'DM Mono', monospace;
+}
+
+/* ============================================================
+   13. EVENT LOG
+   ============================================================ */
+.event-section {
+  margin-top: 18px;
+  padding: 22px 24px;
+}
+
+.event-section .hint {
+  margin-left: auto;
+  letter-spacing: 0;
+}
+
+code {
+  padding: 3px 5px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--accent);
+}
+
+.event-log { border-top: 1px solid var(--border); }
+
+.log-item {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.log-item span {
+  display: inline-block;
+  width: 65px;
+  color: var(--text-faint);
+  font: 500 10px 'DM Mono', monospace;
+}
+
+/* ============================================================
+   14. RESPONSIVE
+   ============================================================ */
+@media (max-width: 700px) {
+  .shell { padding: 20px 16px 45px; }
+
+  .hero {
+    display: block;
+    padding: 42px 0 28px;
+  }
+
+  .model-chip { margin-top: 26px; }
+
+  .bracket-section { padding: 18px 12px; }
+  .bracket { min-width: 760px; }
+
+  .grid { grid-template-columns: 1fr; }
+  .side-column { grid-template-columns: 1fr; }
+
+  .controls { align-items: stretch; }
+  .control-spacer { display: none; }
+  .controls .button { flex: 1; }
+  .controls label { width: 100%; justify-content: space-between; }
+  .controls select { flex: 1; }
+
+  td:nth-child(2) { width: auto; }
+  td small { display: none; }
+
+  .event-section .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .event-section .hint { margin-left: 0; }
+}
+
+/* ============================================================
+   15. ACCESSIBILITY
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
