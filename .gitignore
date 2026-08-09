@@ -12,3 +12,6 @@ __pycache__/
 src/data/kaggle-atp
 src/data/pre_processed
 src/data/trained_models
+
+# scalers
+src/data/scaler

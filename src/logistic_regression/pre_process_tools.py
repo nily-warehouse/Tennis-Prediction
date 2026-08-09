@@ -57,16 +57,20 @@ def split_data(df: pd.DataFrame, y_name, features=FEATURES) -> tuple[np.ndarray,
     )
 
 
-def scale_features(X_train: np.ndarray, X_test: np.ndarray):
+def scale_features(X_train: np.ndarray, X_test: np.ndarray, scaler=None):
     """Scale odd features without centering, to preserve swap-symmetry."""
 
-    # with_mean=False -> pure division by std, keeps f(-x) = -f(x)
-    scaler = StandardScaler(with_mean=False)
+    if scaler == None:
+        # with_mean=False -> pure division by std, keeps f(-x) = -f(x)
+        scaler = StandardScaler(with_mean=False)
+        X_train_scaled = scaler.fit_transform(X_train)
 
-    X_train_scaled = scaler.fit_transform(X_train)   # fit on train only
-    X_test_scaled = scaler.transform(X_test)         # reuse train statistics
+    else :
+        X_train_scaled = scaler.transform(X_train)
 
-    return X_train_scaled, X_test_scaled
+    X_test_scaled  = scaler.transform(X_test)
+
+    return X_train_scaled, X_test_scaled, scaler
 
 
 def add_symmetric_features(df, k=30):
