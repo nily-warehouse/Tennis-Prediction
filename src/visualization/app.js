@@ -125,12 +125,21 @@ function nextPowerOfTwo(value) {
   return 2 ** Math.ceil(Math.log2(value));
 }
 
+function shuffledPlayerPool() {
+  const players = PLAYER_POOL.slice();
+  for (let index = players.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [players[index], players[swapIndex]] = [players[swapIndex], players[index]];
+  }
+  return players;
+}
+
 function createLeague(count) {
   predictionCache.clear();
   pendingPredictions.clear();
   state.error = null;
 
-  state.players = PLAYER_POOL.slice(0, count).map((player, index) => ({
+  state.players = shuffledPlayerPool().slice(0, count).map((player, index) => ({
     ...player, id: index, played: 0, wins: 0, losses: 0, points: 0,
   }));
   state.played = [];
