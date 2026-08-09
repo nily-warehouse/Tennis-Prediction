@@ -370,8 +370,7 @@ button:disabled {
   gap: 18px;
 }
 
-.panel,
-.event-section {
+.panel {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -678,43 +677,7 @@ td small { margin-left: 7px; font-size: 9px; }
 }
 
 /* ============================================================
-   13. EVENT LOG
-   ============================================================ */
-.event-section {
-  margin-top: 18px;
-  padding: 22px 24px;
-}
-
-.event-section .hint {
-  margin-left: auto;
-  letter-spacing: 0;
-}
-
-code {
-  padding: 3px 5px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-  color: var(--accent);
-}
-
-.event-log { border-top: 1px solid var(--border); }
-
-.log-item {
-  padding: 11px 0;
-  border-bottom: 1px solid var(--border-soft);
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.log-item span {
-  display: inline-block;
-  width: 65px;
-  color: var(--text-faint);
-  font: 500 10px 'DM Mono', monospace;
-}
-
-/* ============================================================
-   14. RESPONSIVE
+   13. RESPONSIVE
    ============================================================ */
 @media (max-width: 700px) {
   .shell { padding: 20px 16px 45px; }
@@ -741,12 +704,6 @@ code {
   td:nth-child(2) { width: auto; }
   td small { display: none; }
 
-  .event-section .panel-head {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .event-section .hint { margin-left: 0; }
 }
 
 /* ============================================================
