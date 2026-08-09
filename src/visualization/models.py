@@ -41,10 +41,10 @@ RAW_FEATURES_NAME = [
 
 def _load_pickle(path: Path, description: str):
     """Load a pickled object and log progress."""
-    logger.info("loading %s ...", description)
+    logger.info("[INFO]: loading %s ...", description)
     with open(path, "rb") as f:
         obj = pickle.load(f)
-    logger.info("loaded successfully!")
+    logger.info("[INFO]: loaded successfully!")
     return obj
 
 
@@ -89,7 +89,7 @@ def logistic_reg_prediction(data):
     data.columns = RAW_FEATURES_NAME
     data = tools.drop_first_dummy(data)
     data = tools.add_symmetric_features(data)
-    data = data[FEATURES_NAME]
+    data = data[FEATURES_NAME].to_numpy()
     data = tools.scale_features(data, data, scaler=scaler)[0]
 
     return model.predict_proba(data)[0][1]

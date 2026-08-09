@@ -1,4 +1,4 @@
-import { describeModel, MODEL_PROFILES, predictMatch, clearPredictionCache } from "./model-adapter.js";
+import { describeModel, MODEL_PROFILES } from "./model-adapter.js";
 import { PLAYER_POOL } from "./players.js";
 
 const state = {
@@ -6,19 +6,129 @@ const state = {
   rounds: [],
   played: [],
   estimator: MODEL_PROFILES[0].id,
+  loading: false,
+  error: null,
+};
+
+const predictionCache = new Map();
+const pendingPredictions = new Map();
+const modelNames = {
+  "logistic-regression": "logistic_regression",
+  "random-forest": "random_forest",
+  xgboost: "xgboost",
+  dnn: "dnn",
 };
 
 const $ = (selector) => document.querySelector(selector);
 const formatPct = (value) => `${Math.round(value * 100)}%`;
 const initials = (name) => name.split(" ").map((part) => part[0]).join("").slice(0, 2);
 const predictionContext = (context = {}) => ({ ...context, estimator: state.estimator });
+const numericValue = (value, fallback = 0) => (
+  typeof value === "number" && Number.isFinite(value) ? value : fallback
+);
+
+function playerData(player) {
+  const generalElo = numericValue(player.generalElo);
+  const surfaceElo = numericValue(player.surfaceElo, generalElo);
+  return [
+    player.name,
+    generalElo,
+    surfaceElo,
+    numericValue(player.pts),
+    numericValue(player.rank),
+    numericValue(player.matches),
+    numericValue(player.surfaceMatches),
+    numericValue(player.effectiveElo, generalElo),
+    numericValue(player.spec, surfaceElo - generalElo),
+  ];
+}
+
+function predictionKey(playerA, playerB, context) {
+  const [first, second] = playerA.id <= playerB.id ? [playerA, playerB] : [playerB, playerA];
+  return `${context.estimator}|${first.id}|${second.id}|${context.surface ?? "any"}`;
+}
+
+async function requestPrediction(playerA, playerB, context) {
+  const payload = {
+    player1: playerData(playerA),
+    player2: playerData(playerB),
+    meta_data: [context.surface === "hard" ? "Hard" : context.surface, context.bestOf ?? 3],
+    model: modelNames[context.estimator] ?? context.estimator,
+  };
+  const response = await fetch("/api/estimate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.error || `Estimator request failed (${response.status})`);
+  }
+
+  const probability = Number(result.probability);
+  if (!Number.isFinite(probability) || probability < 0 || probability > 1) {
+    throw new Error("Estimator returned an invalid probability");
+  }
+  return probability;
+}
+
+async function predictMatch(playerA, playerB, context = {}) {
+  if (!playerA || !playerB) return 0.5;
+
+  const fullContext = predictionContext(context);
+  const [first, second] = playerA.id <= playerB.id ? [playerA, playerB] : [playerB, playerA];
+  const key = predictionKey(first, second, fullContext);
+
+  if (!predictionCache.has(key)) {
+    if (!pendingPredictions.has(key)) {
+      pendingPredictions.set(
+        key,
+        requestPrediction(first, second, fullContext)
+          .then((probability) => {
+            predictionCache.set(key, probability);
+            return probability;
+          })
+          .finally(() => pendingPredictions.delete(key)),
+      );
+    }
+    await pendingPredictions.get(key);
+  }
+
+  const firstProbability = predictionCache.get(key);
+  return playerA.id === first.id ? firstProbability : 1 - firstProbability;
+}
+
+function cachedPrediction(playerA, playerB, context = {}) {
+  if (!playerA || !playerB) return null;
+  const fullContext = predictionContext(context);
+  const [first] = playerA.id <= playerB.id ? [playerA, playerB] : [playerB, playerA];
+  const probability = predictionCache.get(predictionKey(playerA, playerB, fullContext));
+  if (probability === undefined) return null;
+  return playerA.id === first.id ? probability : 1 - probability;
+}
+
+function updateEstimatorStatus() {
+  const modelName = describeModel(state.estimator);
+  $("#model-name").textContent = state.error
+    ? `Error: ${state.error}`
+    : state.loading ? `Loading ${modelName}...` : modelName;
+  $("#model-name").title = state.error || "";
+  $("#league-size").disabled = state.loading;
+  $("#estimator-model").disabled = state.loading;
+  $("#new-league").disabled = state.loading;
+  $("#play-one").disabled = state.loading || Boolean(state.error) || !nextMatch();
+  $("#play-all").disabled = state.loading || Boolean(state.error) || !nextMatch();
+}
 
 function nextPowerOfTwo(value) {
   return 2 ** Math.ceil(Math.log2(value));
 }
 
 function createLeague(count) {
-  clearPredictionCache();
+  predictionCache.clear();
+  pendingPredictions.clear();
+  state.error = null;
 
   state.players = PLAYER_POOL.slice(0, count).map((player, index) => ({
     ...player, id: index, played: 0, wins: 0, losses: 0, points: 0,
@@ -92,11 +202,11 @@ function bracketSlot(match, side) {
   return source.resolved ? "" : "Waiting";
 }
 
-function simulateFixture(fixture) {
-  const probability = predictMatch(
+async function simulateFixture(fixture) {
+  const probability = await predictMatch(
     fixture.a,
     fixture.b,
-    predictionContext({ surface: "hard", tournament: state.players }),
+    { surface: "hard", tournament: state.players },
   );
   const homeWins = Math.random() < probability;
   const winner = homeWins ? fixture.a : fixture.b;
@@ -117,22 +227,41 @@ function simulateFixture(fixture) {
   return { winner, loser, probability, homeWins };
 }
 
-function playMatch() {
+async function playMatch() {
   const fixture = nextMatch();
   if (!fixture) return;
-  simulateFixture(fixture);
-  render();
+  state.loading = true;
+  state.error = null;
+  updateEstimatorStatus();
+  try {
+    await simulateFixture(fixture);
+    await render();
+  } catch (error) {
+    state.loading = false;
+    state.error = error.message || "Unable to contact the estimator";
+    renderView();
+  }
 }
 
-function playAll() {
+async function playAll() {
   let champion = null;
   let fixture = nextMatch();
-  while (fixture) {
-    champion = simulateFixture(fixture).winner;
-    fixture = nextMatch();
+  if (!fixture) return;
+  state.loading = true;
+  state.error = null;
+  updateEstimatorStatus();
+  try {
+    while (fixture) {
+      champion = (await simulateFixture(fixture)).winner;
+      fixture = nextMatch();
+    }
+    if (!champion) return;
+    await render();
+  } catch (error) {
+    state.loading = false;
+    state.error = error.message || "Unable to contact the estimator";
+    renderView();
   }
-  if (!champion) return;
-  render();
 }
 
 function standings() {
@@ -141,7 +270,29 @@ function standings() {
   );
 }
 
-function render() {
+async function render() {
+  resolveByes();
+  state.loading = true;
+  state.error = null;
+  updateEstimatorStatus();
+
+  try {
+    const predictions = [];
+    state.rounds.forEach((round) => round.forEach((match) => {
+      if (match.a && match.b) {
+        predictions.push(predictMatch(match.a, match.b, { surface: "hard" }));
+      }
+    }));
+    await Promise.all(predictions);
+  } catch (error) {
+    state.error = error.message || "Unable to contact the estimator";
+  }
+
+  state.loading = false;
+  renderView();
+}
+
+function renderView() {
   resolveByes();
 
   $("#standings-body").innerHTML = standings().map((player, index) => `
@@ -155,15 +306,13 @@ function render() {
   const totalMatches = Math.max(0, state.players.length - 1);
   $("#fixture-count").textContent = `${state.played.length} / ${totalMatches} matches played`;
   $("#progress").style.width = `${totalMatches ? (state.played.length / totalMatches) * 100 : 0}%`;
-  $("#model-name").textContent = describeModel(state.estimator);
-  $("#play-one").disabled = !next;
-  $("#play-all").disabled = !next;
+  updateEstimatorStatus();
 
-  const probability = next ? predictMatch(next.a, next.b, predictionContext({ surface: "hard" })) : 0.5;
-  $("#prob-a").style.width = `${probability * 100}%`;
-  $("#prob-b").style.width = `${(1 - probability) * 100}%`;
-  $("#prob-a-label").textContent = next ? formatPct(probability) : "—";
-  $("#prob-b-label").textContent = next ? formatPct(1 - probability) : "—";
+  const probability = next ? cachedPrediction(next.a, next.b, { surface: "hard" }) : null;
+  $("#prob-a").style.width = `${(probability ?? 0.5) * 100}%`;
+  $("#prob-b").style.width = `${(1 - (probability ?? 0.5)) * 100}%`;
+  $("#prob-a-label").textContent = probability !== null ? formatPct(probability) : "—";
+  $("#prob-b-label").textContent = probability !== null ? formatPct(1 - probability) : "—";
   $("#player-a").textContent = next ? next.a.name : "—";
   $("#player-b").textContent = next ? next.b.name : "—";
 
@@ -182,7 +331,7 @@ function render() {
         const winnerA = Boolean(match.winner && match.a && match.winner.id === match.a.id);
         const winnerB = Boolean(match.winner && match.b && match.winner.id === match.b.id);
         const edge = match.a && match.b
-          ? predictMatch(match.a, match.b, predictionContext({ surface: "hard" }))
+          ? cachedPrediction(match.a, match.b, { surface: "hard" })
           : null;
         return `<div class="bracket-match ${match.winner ? "is-complete" : ""} ${next === match ? "is-next" : ""}">
           <div class="bracket-player ${winnerA ? "is-winner" : ""}"><span>${typeof a === "string" ? a : a.name}</span>${winnerA ? "✓" : ""}</div>

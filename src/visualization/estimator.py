@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from models import predict as pred
 
 
@@ -43,5 +44,48 @@ def log_diff(x, y):
     return np.log1p(x) - np.log1p(y)
 
 
-def estimate(player1, player2, meta_data):
-    return pred(extract_data(player1, player2, meta_data))
+def _to_native(value):
+    if isinstance(value, dict):
+        return {key: _to_native(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_native(item) for item in value]
+    if isinstance(value, pd.DataFrame):
+        return [_to_native(item) for item in value.to_dict(orient="records")]
+    if isinstance(value, pd.Series):
+        return _to_native(value.to_dict())
+    if isinstance(value, pd.Index):
+        return [_to_native(item) for item in value.tolist()]
+    if isinstance(value, np.ndarray):
+        return [_to_native(item) for item in value.tolist()]
+    if isinstance(value, np.generic):
+        return _to_native(value.item())
+    if value is pd.NA or value is pd.NaT:
+        return None
+    if isinstance(value, (pd.Timestamp, pd.Timedelta)):
+        return value.isoformat()
+    missing = pd.isna(value)
+    if isinstance(missing, (bool, np.bool_)) and missing:
+        return None
+    return value
+
+
+def _estimate(player1, player2, meta_data, model):
+    return pred([extract_data(player1, player2, meta_data)], model)
+
+
+def estimate(payload: dict) -> dict:
+    if not isinstance(payload, dict):
+        raise TypeError("Request payload must be a JSON object")
+
+    required = ("player1", "player2", "meta_data", "model")
+    missing = [key for key in required if key not in payload]
+    if missing:
+        raise ValueError(f"Missing required field(s): {', '.join(missing)}")
+
+    probability = _estimate(
+        payload["player1"],
+        payload["player2"],
+        payload["meta_data"],
+        payload["model"],
+    )
+    return _to_native({"probability": probability})
